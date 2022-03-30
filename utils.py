@@ -7,7 +7,7 @@ import unicodedata
 import numpy as np
 import yaml
 
-from definitions import RESULT_DIR, CONFIG_FILE, TEXT_DIR, default_config
+from definitions import RESULT_DIR, CONFIG_FILE, TEXT_DIR, default_config, umap
 
 _config = None
 
@@ -36,8 +36,9 @@ def read_random_text_part(character_count: int, convert_letters: bool = True,
         file_select = random.randint(0, len(text_files) - 1)
     text_file = text_files[file_select]
     text_data = open(text_file, "rt", encoding="utf-8").read()
+    text_data = unicodedata.normalize("NFKC", text_data)
     if convert_letters:
-        text_data = unicodedata.normalize("NFKC", text_data)
+        text_data = text_data.translate(umap)
     text_data = text_data * (1 + character_count // len(text_data))
     random_pos = random.randint(0, len(text_data) - 1 - character_count)
     return text_data[random_pos:random_pos + character_count]
@@ -57,7 +58,7 @@ def write_event(event: dict):
         return json.dump(event, file)
 
 
-def load_events() -> list[dict]:
+def load_events() -> list:
     print("loading events...")
     events = []
     for event_file in sorted(list(glob.glob(f"{RESULT_DIR}/*.json"))):
