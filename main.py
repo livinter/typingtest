@@ -7,6 +7,10 @@ from utils import load_config, read_random_text_part, linear_regression_get_beta
 from datetime import datetime, timezone, timedelta
 
 config = load_config()
+default_config = {"language":"en",
+                  "character_count":500,
+                  "convert_letters": 0}
+
 kb = KBHit()
 ESC = chr(27)
 ENTER = chr(10)
@@ -58,9 +62,9 @@ def typing_errors(time_passed: list, example_text: str):
 
 def typing_test():
     time_passed = []
-    example_text = read_random_text_part(character_count=config["character_count"],
-                                         convert_letters=config["convert_letters"],
-                                         language=config["language"])
+    example_text = read_random_text_part(character_count=config.get("character_count",default_config["character_count"]),
+                                         convert_letters=config.get("convert_letters",default_config["convert_letters"]),
+                                         language=config.get("language",default_config["language"]))
 
     print("Typing test, please write the text below, and finish with ESC")
     print(example_text)
@@ -85,7 +89,7 @@ def typing_test():
 
     return {"start_time": start_time,
             "time_zone": time_zone,
-            "language": config["language"],
+            "language": config.get("language",default_config["language"]),
             "type": "typing_test",
             "time_passed": typing_errors(time_passed, example_text),
             "example_text": example_text}
