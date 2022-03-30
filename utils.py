@@ -6,6 +6,26 @@ import json
 import os
 from unidecode import unidecode
 
+_default_config = {"language": "en",
+                   "character_count": 500,
+                   "left_hand": "123456~!#$%^qwertasdfgzxcvQWERTASDFGZXCV",
+                   "convert_letters": 0,
+                   "right_hand": '7890uiophjkl;nm,.<>'
+                   }
+
+_config = None
+
+def _load_config():
+    with open(r'config.yaml') as file:
+        return yaml.load(file, Loader=yaml.SafeLoader)
+
+
+def get_config_value(key):
+    global _config
+    if _config is None:
+        _config = _load_config()
+    return _config.get(key, _default_config[key])
+
 
 def read_random_text_part(character_count, convert_letters=True, language=None):
     if language:
@@ -18,7 +38,7 @@ def read_random_text_part(character_count, convert_letters=True, language=None):
     if convert_letters:
         text_data = unidecode(text_data)
     text_data = text_data * (1 + character_count // len(text_data))
-    random_pos = random.randint(0, len(text_data) - 1) - character_count
+    random_pos = random.randint(0, len(text_data) - 1- character_count)
     return text_data[random_pos:random_pos + character_count]
 
 
@@ -27,11 +47,6 @@ def linear_regression_get_beta(y):
     x = np.arange(len(y))
     y = np.array(y)
     return np.sum((x - x.mean()) * (y - y.mean())) / np.sum((x - x.mean()) ** 2)
-
-
-def load_config():
-    with open(r'config.yaml') as file:
-        return yaml.load(file, Loader=yaml.SafeLoader)
 
 
 def write_event(event):

@@ -3,13 +3,9 @@ import pandas as pd
 import sys
 from kbhit import KBHit
 from find_next_letters import get_next_letters
-from utils import load_config, read_random_text_part, linear_regression_get_beta, write_event, load_events
+from utils import get_config_value, read_random_text_part, linear_regression_get_beta, write_event, load_events
 from datetime import datetime, timezone, timedelta
 
-config = load_config()
-default_config = {"language":"en",
-                  "character_count":500,
-                  "convert_letters": 0}
 
 kb = KBHit()
 ESC = chr(27)
@@ -60,11 +56,11 @@ def typing_errors(time_passed: list, example_text: str):
     return time_passed_with_error
 
 
-def typing_test():
+def testing_typing():
     time_passed = []
-    example_text = read_random_text_part(character_count=config.get("character_count",default_config["character_count"]),
-                                         convert_letters=config.get("convert_letters",default_config["convert_letters"]),
-                                         language=config.get("language",default_config["language"]))
+    example_text = read_random_text_part(character_count=get_config_value("character_count"),
+                                         convert_letters=get_config_value("convert_letters"),
+                                         language=get_config_value("language"))
 
     print("Typing test, please write the text below, and finish with ESC")
     print(example_text)
@@ -89,7 +85,7 @@ def typing_test():
 
     return {"start_time": start_time,
             "time_zone": time_zone,
-            "language": config.get("language",default_config["language"]),
+            "language": get_config_value("language"),
             "type": "typing_test",
             "time_passed": typing_errors(time_passed, example_text),
             "example_text": example_text}
@@ -101,8 +97,8 @@ def analyze_typing_test(typing_test_data):
          "correct": [e for t, l, e in typing_test_data["time_passed"]]}
     df = pd.DataFrame(d)
 
-    df["left"] = df["letter"].isin([e for e in config["left_hand"]])
-    df["right"] = df["letter"].isin([e for e in config["right_hand"]])
+    df["left"] = df["letter"].isin([e for e in get_config_value("left_hand")])
+    df["right"] = df["letter"].isin([e for e in get_config_value("right_hand")])
     df['left_left'] = df.left & df.left.shift(1)
     df['right_right'] = df.right & df.right.shift(1)
     metrics = {"general      ": df,
@@ -154,7 +150,7 @@ if __name__ == '__main__':
                 print_event(event)
                 write_event(event)
         if k_in == '2':
-            event = typing_test()
+            event = testing_typing()
             write_event(event)
             print_event(event)
         if k_in == '3':
