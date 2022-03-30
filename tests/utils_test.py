@@ -27,5 +27,5 @@ def test_example_text_read():
 
 
 def test_linear_regression_get_beta():
-    assert linear_regression_get_beta(np.array([4, 5, 6, 7, 8])) == 1
+    assert linear_regression_get_beta([4, 5., 6, 7, 8]) == 1
     assert linear_regression_get_beta([4., 4, 4, 4, 4]) == 0
