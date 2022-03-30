@@ -1,4 +1,6 @@
 import os
+from definitions import BACK, ENTER, ESC
+
 # Windows
 if os.name == 'nt':
     import msvcrt
@@ -9,6 +11,7 @@ else:
     import termios
     import atexit
     from select import select
+
 
 class KBHit:
     def __init__(self):
@@ -28,7 +31,6 @@ class KBHit:
             # Support normal-terminal reset at exit
             atexit.register(self.set_normal_term)
 
-
     def set_normal_term(self):
         ''' Resets to normal terminal.  On Windows this is a no-op.
         '''
@@ -39,7 +41,6 @@ class KBHit:
         else:
             termios.tcsetattr(self.fd, termios.TCSAFLUSH, self.old_term)
 
-
     def getch(self):
         ''' Returns a keyboard character after kbhit() has been called.
             Should not be called in the same program as getarrow().
@@ -48,11 +49,10 @@ class KBHit:
         s = ''
 
         if os.name == 'nt':
-            #return msvcrt.getch().decode('utf-8')
+            # return msvcrt.getch().decode('utf-8')
             return msvcrt.getwch()
         else:
             return sys.stdin.read(1)
-
 
     def getarrow(self):
         ''' Returns an arrow-key code after kbhit() has been called. Codes are
@@ -64,7 +64,7 @@ class KBHit:
         '''
 
         if os.name == 'nt':
-            msvcrt.getch() # skip 0xE0
+            msvcrt.getch()  # skip 0xE0
             c = msvcrt.getch()
             vals = [72, 77, 80, 75]
 
@@ -73,12 +73,31 @@ class KBHit:
             vals = [65, 67, 66, 68]
         return vals.index(ord(c.decode('utf-8')))
 
-
     def kbhit(self):
         ''' Returns True if keyboard character was hit, False otherwise.
         '''
         if os.name == 'nt':
             return msvcrt.kbhit()
         else:
-            dr,dw,de = select([sys.stdin], [], [], 0)
+            dr, dw, de = select([sys.stdin], [], [], 0)
             return dr != []
+
+    def get_string(self):
+        text = ""
+        while True:
+            if self.kbhit():
+                k_in = self.getch()
+                if k_in == ESC:
+                    print("\naborted")
+                    return None
+                if k_in == ENTER:
+                    print("\n done")
+                    break
+                if k_in == BACK:
+                    text = text[-1:]
+                    print('\b ', end="", flush=True)
+                    sys.stdout.write('\010')
+                else:
+                    text += k_in
+                    print(end=k_in, flush=True)
+        return text

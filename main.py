@@ -2,64 +2,38 @@ import time
 import pandas as pd
 import sys
 from kbhit import KBHit
-from find_next_letters import get_next_letters
 from utils import get_config_value, read_random_text_part, linear_regression_get_beta, write_event, load_events
 from datetime import datetime, timezone, timedelta
+from definitions import *
+from typing_errors import typing_errors
 
-
-kb = KBHit()
-ESC = chr(27)
-ENTER = chr(10)
-BACK = chr(127)
 time_zone = datetime.utcnow().astimezone().tzinfo.utcoffset(datetime.now()).seconds
 
 
-def text_event():
-    print(end="Event: ", flush=True)
-    start_time = int(time.time())
-    text = ""
-    while True:
-        if kb.kbhit():
-            k_in = kb.getch()
-            if k_in == ESC:
-                print("\naborted")
-                return {}
-            if k_in == ENTER:
-                print("\n done")
-                break
-            if k_in == BACK:
-                text = text[-1:]
-                print('\b ', end="", flush=True)
-                sys.stdout.write('\010')
-            else:
-                text += k_in
-                print(end=k_in, flush=True)
+def text_event(kb):
+    print(end="How many hours the event has passed: (0.0 for now)", flush=True)
+    hours_ago=kb.get_string()
+    if not hours_ago:
+        hours_ago=0.0
+    else:
+        hours_ago=float(hours_ago)
+    print(f"{int(hours_ago*60)} min ago")
 
-    return {"start_time": start_time,
-            "time_zone": time_zone,
-            "type": "text",
-            "text": text}
+    print(end="Event text: ", flush=True)
+    start_time = int(time.time())-int(hours_ago*60)
+    text=kb.get_string()
+    if text:
+        return {"start_time": start_time,
+                "time_zone": time_zone,
+                "type": "text",
+                "text": text}
+    else:
+        return {}
 
-
-def typing_errors(time_passed: list, example_text: str):
-    print(end="Analyzing typing errors...", flush=True)
-    written_text = ""
-    time_passed_with_error = []
-    for t, c in time_passed:
-        right = get_next_letters(example_text, written_text[-50:])
-        if c == BACK:
-            written_text = written_text[:-1]
-        else:
-            written_text += c
-        time_passed_with_error.append((t, c, c in right))
-    print()
-    return time_passed_with_error
-
-
-def testing_typing():
+def testing_typing(kb):
     time_passed = []
     example_text = read_random_text_part(character_count=get_config_value("character_count"),
-                                         convert_letters=get_config_value("convert_letters"),
+                                         convert_letters=bool(get_config_value("convert_letters")),
                                          language=get_config_value("language"))
 
     print("Typing test, please write the text below, and finish with ESC")
@@ -83,11 +57,14 @@ def testing_typing():
             last_hit = time.time()
         time.sleep(0.0001)
 
+    print(end="Analyzing typing errors...", flush=True)
+    time_passed_e = typing_errors(time_passed, example_text)
+    print()
     return {"start_time": start_time,
             "time_zone": time_zone,
             "language": get_config_value("language"),
             "type": "typing_test",
-            "time_passed": typing_errors(time_passed, example_text),
+            "time_passed": time_passed_e,
             "example_text": example_text}
 
 
@@ -129,6 +106,8 @@ def print_event(event):
 
 
 if __name__ == '__main__':
+    kb = KBHit()
+
     while True:
         print(
             """select an option:
@@ -141,16 +120,16 @@ if __name__ == '__main__':
             time.sleep(0.001)
 
         k_in = kb.getch()
-        if k_in == ESC:
+        if k_in in [ESC,'q']:
             print("quiting")
             break
         if k_in == '1':
-            event = text_event()
+            event = text_event(kb)
             if event:
                 print_event(event)
                 write_event(event)
         if k_in == '2':
-            event = testing_typing()
+            event = testing_typing(kb)
             write_event(event)
             print_event(event)
         if k_in == '3':
@@ -159,4 +138,4 @@ if __name__ == '__main__':
                 print_event(event)
         time.sleep(0.001)
 
-kb.set_normal_term()
+    kb.set_normal_term()
