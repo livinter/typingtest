@@ -4,7 +4,7 @@ import numpy as np
 import yaml
 import json
 import os
-from unidecode import unidecode
+import unicodedata
 
 _default_config = {"language": "en",
                    "character_count": 500,
@@ -34,9 +34,9 @@ def read_random_text_part(character_count, convert_letters=True, language=None):
         language_filter = ""
     text_files = list(glob.glob(f"texts/*{language_filter}.txt"))
     text_file = text_files[random.randint(0, len(text_files) - 1)]
-    text_data = open(text_file).read()
+    text_data = open(text_file, "rt", encoding="utf-8").read()
     if convert_letters:
-        text_data = unidecode(text_data)
+        text_data = unicodedata.normalize("NFKC", text_data)
     text_data = text_data * (1 + character_count // len(text_data))
     random_pos = random.randint(0, len(text_data) - 1- character_count)
     return text_data[random_pos:random_pos + character_count]
