@@ -50,12 +50,14 @@ def testing_typing(kb):
                 break
             time_passed.append((time.time() - last_hit, k_in))
             if k_in == BACK:
-                print('\b ', end="", flush=True)
-                sys.stdout.write('\010')
+                print(' \b\b', end="", flush=True)
+                sys.stdout.write(' \010')
             else:
                 print(end=k_in, flush=True)
             last_hit = time.time()
         time.sleep(0.0001)
+    if len(time_passed)<10:
+        return {}
 
     print(end="Analyzing typing errors...", flush=True)
     time_passed_e = typing_errors(time_passed, example_text)
@@ -110,9 +112,9 @@ if __name__ == '__main__':
 
     while True:
         print(
-            """select an option:
+            f"""select an option:
                1) register an event
-               2) measure typing speed 
+               2) measure typing speed [{get_config_value('language')}]
                3) show history    
              ESC) quit                 
             """, flush=True)
@@ -130,8 +132,9 @@ if __name__ == '__main__':
                 write_event(event)
         if k_in == '2':
             event = testing_typing(kb)
-            write_event(event)
-            print_event(event)
+            if event:
+                write_event(event)
+                print_event(event)
         if k_in == '3':
             events = load_events()
             for event in events:
