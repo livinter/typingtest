@@ -2,8 +2,7 @@ from itertools import count
 from definitions import BACK
 
 
-def get_next_letters(s:str, pattern:str):
-
+def get_next_letters(s: str, pattern: str):
     def get_matches(pattern, add=0):
         # make two letter pairs with index
         return [(i * 2 + add, c1 + c2) for c1, c2, i in zip(pattern[::2], pattern[1::2], count())]
@@ -31,15 +30,14 @@ def get_next_letters(s:str, pattern:str):
     return [s[p] for score, p in positions if score >= best_score - 1]
 
 
-
 def typing_errors(time_passed: list, example_text: str):
     written_text = ""
     time_passed_with_error = []
     for t, c in time_passed:
-        right = get_next_letters(example_text, written_text[-50:])
+        right = get_next_letters(example_text, written_text[-99:])
         if c == BACK:
             written_text = written_text[:-1]
         else:
             written_text += c
-        time_passed_with_error.append((t, c, c in right))
+            time_passed_with_error.append((t, c, c in right))
     return time_passed_with_error
